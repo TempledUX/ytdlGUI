@@ -4,6 +4,13 @@ from threading import Thread
 from os import path
 import youtube_dl
 
+#Check for updates
+from bs4 import BeautifulSoup
+import requests
+
+repo_url = "https://github.com/TempledUX/ytdlGUI"
+version = 1.3
+
 class MyLogger(object):
     def debug(self,msg):
         pass
@@ -47,7 +54,9 @@ def getLocalization(language):
             "messagebox_inputerror_title": "Error en los datos",
             "messagebox_error_nourl": "Introduce una url de video antes de comenzar la descarga.",
             "messagebox_error_outputdir": "No se ha seleccionado ningún directorio de salida.",
-            "filedialog_outdir_title": "Seleccionar directorio de salida"
+            "filedialog_outdir_title": "Seleccionar directorio de salida",
+            "messagebox_update_title": "Actualización disponible",
+            "messagebox_update_desc": "Puedes descargar una nueva versión del programa en: https://github.com/TempledUX/ytdlGUI"
         }
     elif language == "english":
         return {
@@ -68,7 +77,9 @@ def getLocalization(language):
             "messagebox_inputerror_title": "Input error",
             "messagebox_error_nourl": "Input a video url before starting the download.",
             "messagebox_error_outputdir": "No output directory was selected.",
-            "filedialog_outdir_title": "Select an output directory"
+            "filedialog_outdir_title": "Select an output directory",
+            "messagebox_update_title": "Update available",
+            "messagebox_update_desc": "You can download a new version of the program here: https://github.com/TempledUX/ytdlGUI"
         }
 
 def initLocalization() -> str:
@@ -83,7 +94,7 @@ def initLocalization() -> str:
         idx = data.find('=')
         locsetting = data[idx+1:]
     except Exception:
-        return 'spanish'
+        return 'english'
     return locsetting
 
 def saveLocalization(locsetting: str, app):
@@ -192,7 +203,13 @@ class Aplicacion():
         Thread(target=downloadThread, args=[ydl_opts, self.uriedit.get()]).run()
 
     def check_update(self):
-        pass
+        html_repo = requests.get(repo_url).text
+        soup = BeautifulSoup(html_repo, features="html.parser")
+        ver_info = soup.find("p", {"id": "user-content-ver"}).text
+        idx = ver_info.rfind('v')
+        last_ver = ver_info[idx+1:]
+        if (version < float(last_ver)):
+            messagebox.showinfo(self.localization['messagebox_update_title'], self.localization['messagebox_update_desc'])
 
     def about(self):
         messagebox.showinfo(self.localization['maintenance_about'], self.localization['about_msg'])
