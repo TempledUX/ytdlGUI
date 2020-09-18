@@ -75,7 +75,7 @@ def initLocalization() -> str:
     try:
         if not (path.exists('youtubeGUI_settings.txt')):
             infile = open('youtubeGUI_settings.txt','w')
-            infile.write('localization=spanish')
+            infile.write('localization=english')
             infile.close()
             raise Exception
         infile = open('youtubeGUI_settings.txt','r')
