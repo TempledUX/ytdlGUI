@@ -22,7 +22,7 @@ class MyLogger(object):
             count = int(msg[idx+11:idx2])
             self.gui.playlist_total_count = count
             self.gui.p2label.config(text=f"/{count}")
-            print(f"Count of videos: {count}")
+            #print(f"Count of videos: {count}")
     def warning(self,msg):
         print(msg)
     def error(self,msg):
