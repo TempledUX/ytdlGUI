@@ -9,15 +9,29 @@ from bs4 import BeautifulSoup
 import requests
 
 repo_url = "https://github.com/TempledUX/ytdlGUI"
-version = 1.3
+version = 1.4
 
 class MyLogger(object):
+    def __init__(self, gui):
+        self.gui = gui
     def debug(self,msg):
-        pass
+        #Capture playlist length in debug info
+        if '[youtube:playlist] playlist' in msg:
+            idx = msg.find('Downloading')
+            idx2 = msg.rfind('videos')
+            count = int(msg[idx+11:idx2])
+            self.gui.playlist_total_count = count
+            self.gui.p2label.config(text=f"/{count}")
+            print(f"Count of videos: {count}")
     def warning(self,msg):
-        pass
+        print(msg)
     def error(self,msg):
         messagebox.showerror("Error en la descarga", msg)
+        try:
+            self.gui.principal.downloadBtn.config(state=NORMAL)
+            self.gui.principal.update()
+        except Exception:
+            exit()
 
 def downloadThread(ydl_opts,uri):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -43,7 +57,7 @@ def getLocalization(language):
             "maintenance_menu": "Mantenimiento",
             "maintenance_update": "Buscar actualizaciones",
             "maintenance_about": "Sobre el programa...",
-            "about_msg": "Interfaz de usuario para la extracción de audio de youtube basada en youtube-dl. \nÚltima versión: v1.3, 18/09/2020 @ TempledUX \nRepositorio oficial: repo",
+            "about_msg": "Interfaz de usuario para la extracción de audio de youtube basada en youtube-dl. \nÚltima versión: v1.3, 18/09/2020 @ TempledUX \nRepositorio oficial: " + repo_url,
             "video_url_label": "Url del video",
             "full_playlists_label": "Descargar listas de reproducción completas",
             "audio_extraction_button": "Extraer audio",
@@ -56,7 +70,9 @@ def getLocalization(language):
             "messagebox_error_outputdir": "No se ha seleccionado ningún directorio de salida.",
             "filedialog_outdir_title": "Seleccionar directorio de salida",
             "messagebox_update_title": "Actualización disponible",
-            "messagebox_update_desc": "Puedes descargar una nueva versión del programa en: https://github.com/TempledUX/ytdlGUI"
+            "messagebox_update_desc": "Puedes descargar una nueva versión del programa en: https://github.com/TempledUX/ytdlGUI",
+            "messagebox_noupdate_title": "Sin actualizaciones",
+            "messagebox_noupdate_desc": "Dispones de la última versión del programa."
         }
     elif language == "english":
         return {
@@ -66,7 +82,7 @@ def getLocalization(language):
             "maintenance_menu": "Maintenance",
             "maintenance_update": "Search for updates",
             "maintenance_about": "About...",
-            "about_msg": "Youtube audio extractor GUI based in youtube-dl. \nLastest version: v1.3, 18/09/2020 @ TempledUX \nOfficial repository: repo",
+            "about_msg": "Youtube audio extractor GUI based in youtube-dl. \nLastest version: v1.3, 18/09/2020 @ TempledUX \nOfficial repository: " + repo_url,
             "video_url_label": "Video Url",
             "full_playlists_label": "Download full playlists",
             "audio_extraction_button": "Extract audio",
@@ -79,7 +95,9 @@ def getLocalization(language):
             "messagebox_error_outputdir": "No output directory was selected.",
             "filedialog_outdir_title": "Select an output directory",
             "messagebox_update_title": "Update available",
-            "messagebox_update_desc": "You can download a new version of the program here: https://github.com/TempledUX/ytdlGUI"
+            "messagebox_update_desc": "You can download a new version of the program here: https://github.com/TempledUX/ytdlGUI",
+            "messagebox_noupdate_title": "No updates available",
+            "messagebox_noupdate_desc": "You have installed the lastest version of the program."
         }
 
 def initLocalization() -> str:
@@ -140,7 +158,15 @@ class Aplicacion():
         self.uriedit.bind('<Button-3>', rClicker, add='')
         self.checkboxlistvar = BooleanVar(self.principal)
         self.checkboxlistvar.set(False)
-        self.checkboxlist = ttk.Checkbutton(self.principal, text=self.localization['full_playlists_label'], variable=self.checkboxlistvar)
+        
+        self.pblock = ttk.Frame(self.principal)
+        self.checkboxlist = ttk.Checkbutton(self.pblock, text=self.localization['full_playlists_label'], variable=self.checkboxlistvar, command=self.onClickCheckbox)
+
+        self.playlist_total_count = 0 
+        self.playlist_count = StringVar(self.principal)
+        self.playlist_count.set('0')
+        self.p1label = ttk.Label(self.pblock, textvariable=self.playlist_count, state=DISABLED)
+        self.p2label = ttk.Label(self.pblock, text="/-", state=DISABLED)
 
         self.pbar = ttk.Progressbar(self.principal)
         self.downloadBtn = ttk.Button(self.principal, text=self.localization['audio_extraction_button'], command=self.startDownload)
@@ -149,11 +175,24 @@ class Aplicacion():
         self.urilabel.pack(side=LEFT,fill=None,expand=True,padx=0,pady=0)
         self.uriedit.pack(side=LEFT,fill=X,expand=True,padx=0,pady=0)
         self.uriclear.pack(side=LEFT,fill=None,expand=False,padx=(5,15),pady=0)
-        self.checkboxlist.pack(side=TOP,fill=X,expand=True,padx=(18,5),pady=0,anchor='w')
+
+        self.pblock.pack(side=TOP,fill=BOTH,expand=True,padx=0,pady=0)
+        self.checkboxlist.pack(side=LEFT,fill=X,expand=True,padx=(18,5),pady=0,anchor='w')
+        self.p2label.pack(side=RIGHT,fill=None,expand=False,padx=(0,20),pady=0)
+        self.p1label.pack(side=RIGHT,fill=None,expand=False,padx=0,pady=0)
+
         self.pbar.pack(side=TOP,fill=X,expand=True,padx=20,pady=0)
         self.downloadBtn.pack(side=TOP,fill=Y,expand=True,padx=5,pady=(0,10),ipadx=20)
 
         self.principal.mainloop()
+
+    def onClickCheckbox(self):
+        if self.checkboxlistvar.get():
+            self.p1label.config(state=NORMAL)
+            self.p2label.config(state=NORMAL)
+        else:
+            self.p1label.config(state=DISABLED)
+            self.p2label.config(state=DISABLED)
 
     def hook(self,d):
         if d['status'] == 'finished':
@@ -161,10 +200,21 @@ class Aplicacion():
                 self.pbar.stop()
                 self.pbar.config(mode="determinate")
                 self.principal.update()
-            messagebox.showinfo(self.localization['messagebox_completed_title'], self.localization['messagebox_completed_desc'])
+            if not self.checkboxlistvar.get():
+                #No playlist mode
+                messagebox.showinfo(self.localization['messagebox_completed_title'], self.localization['messagebox_completed_desc'])
+                self.downloadBtn.config(state=NORMAL)
+            else:
+                #Playlist mode
+                self.playlist_count.set(str(int(self.playlist_count.get()) + 1))
+                if self.playlist_count.get() == self.playlist_total_count:
+                    messagebox.showinfo(self.localization['messagebox_completed_title'], self.localization['messagebox_completed_desc'])
+                    #Clear variables
+                    self.playlist_count.set('0')
+                    self.p2label.config(text="/-")
+                    self.downloadBtn.config(state=NORMAL)
             self.pbar.config(value=0)
             self.principal.update()
-            self.downloadBtn.config(state=NORMAL)
             self.progressOk = True
         elif d['status'] == 'downloading':
             if self.progressOk:
@@ -194,9 +244,10 @@ class Aplicacion():
                 'preferredcodec': 'mp3',
                 'preferredquality': '192'
             }],
-            'logger': MyLogger(),
+            'logger': MyLogger(self),
             'progress_hooks': [self.hook],
-            'noplaylist': not self.checkboxlistvar.get()
+            'noplaylist': not self.checkboxlistvar.get(),
+            'ignoreerrors': self.checkboxlistvar.get()
         }
         self.downloadBtn.config(state=DISABLED)
         self.principal.update()
@@ -210,6 +261,8 @@ class Aplicacion():
         last_ver = ver_info[idx+1:]
         if (version < float(last_ver)):
             messagebox.showinfo(self.localization['messagebox_update_title'], self.localization['messagebox_update_desc'])
+        else:
+            messagebox.showinfo(self.localization['messagebox_noupdate_title'], self.localization['messagebox_noupdate_desc'])
 
     def about(self):
         messagebox.showinfo(self.localization['maintenance_about'], self.localization['about_msg'])
