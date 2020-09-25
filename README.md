@@ -10,4 +10,4 @@ The ffmpeg builds for Windows can be found here: https://drive.google.com/file/d
 
 Icons designed by https://www.flaticon.es/autores/pixel-perfectPixel from www.flaticon.es
 
-<p id="ver">Lastest version: 18/09/2020, v1.3</p>
+<p id="ver">Lastest version: 25/09/2020, v1.4</p>
