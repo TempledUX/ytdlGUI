@@ -132,7 +132,7 @@ class Aplicacion():
 
         self.principal = Tk()
         self.principal.resizable(False,False)
-        self.principal.title("Youtube mp3 extractor - v1.3")
+        self.principal.title("Youtube mp3 extractor - v1.4")
         self.principal.geometry("450x170")
         #Icon from Flaticon.com - Pixel perfect
         self.principal.iconbitmap('yt.ico')
