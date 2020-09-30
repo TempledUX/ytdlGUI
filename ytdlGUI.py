@@ -207,7 +207,7 @@ class Aplicacion():
             else:
                 #Playlist mode
                 self.playlist_count.set(str(int(self.playlist_count.get()) + 1))
-                if self.playlist_count.get() == self.playlist_total_count:
+                if int(self.playlist_count.get()) == self.playlist_total_count:
                     messagebox.showinfo(self.localization['messagebox_completed_title'], self.localization['messagebox_completed_desc'])
                     #Clear variables
                     self.playlist_count.set('0')
