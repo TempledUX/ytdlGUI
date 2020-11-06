@@ -1,5 +1,7 @@
 # ytdlGUI
 
+![Screenshot of the GUI](ytdlGUI.png?raw=true "Screenshot of the GUI")
+
 ytdlGUI.py is a graphical user interfaced based in python tkinter and aimed for audio extraction from Youtube videos using youtube-dl python library.
 
 ### Instructions
